@@ -6,7 +6,8 @@ from argparse import ArgumentParser
 from pathlib import Path
 from typing import List
 from os import listdir
-from core.figsplit_wrapper import FigSplitWrapper
+
+from figsplit.core.figsplit_wrapper import FigSplitWrapper
 
 
 FIGSPLIT_URL = "https://www.eecis.udel.edu/~compbio/FigSplit"
@@ -79,7 +80,3 @@ def main():
         with multiprocessing.Pool(args.num_workers) as pool:
             pool.starmap(split, data_batch)
         pool.terminate()
-
-
-if __name__ == "__main__":
-    main()

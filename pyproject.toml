@@ -3,16 +3,25 @@ name = "figsplit"
 version = "0.1.0"
 description = ""
 authors = ["Juan Trelles <juantrelles@gmail.com>"]
+license = "MIT"
+
+packages = [
+  { include = "figsplit" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-pylint = "^2.15.9"
 requests = "^2.28.1"
-black = "^22.12.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
+black = "^22.12.0"
+pylint = "^2.15.9"
+
+[tool.poetry.scripts]
+split = "figsplit.split:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
