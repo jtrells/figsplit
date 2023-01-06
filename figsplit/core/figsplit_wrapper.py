@@ -22,7 +22,7 @@ class FigSplitWrapper:
             else (".jpg", ".png", ".jpeg", "bmp", "tif", ".tif")
         )
 
-    def split(self, _folder_path: str):
+    def split(self, _folder_path: str) -> Tuple[int, int, int, bool]:
         """Split JPG, JPEG, PNG, BMP, and, TIF images inside the folder path"""
         figures = [x for x in listdir(_folder_path) if x.endswith(self.extensions)]
 
@@ -30,6 +30,7 @@ class FigSplitWrapper:
         num_processed = 0
         num_success = 0
 
+        raised_internal_server_error = False
         for figure in figures:
             num_processed += 1
             figure_file = None
@@ -41,10 +42,11 @@ class FigSplitWrapper:
                     self.download_splitted_content(_folder_path, response, figure)
                     num_success += 1
                 else:
-                    message = f"{_folder_path} -{figure} failed with code {response.status_code}"
+                    message = f"{_folder_path}-{figure} code {response.status_code}"
                     logging.error(message)
+                    raised_internal_server_error = True
             except ConnectTimeout:
-                message = f"{_folder_path} -{figure} timed-out:"
+                message = f"{_folder_path}-{figure} timed-out:"
                 logging.error(message, exc_info=True)
             except Exception:  # pylint: disable=broad-except
                 message = f"{_folder_path}-{figure}:"
@@ -53,7 +55,7 @@ class FigSplitWrapper:
                 if figure_file:
                     figure_file.close()
 
-        return num_figures, num_processed, num_success
+        return num_figures, num_processed, num_success, raised_internal_server_error
 
     def download_splitted_content(self, _folder_path, _response, _figure_name):
         """Process response to get output"""

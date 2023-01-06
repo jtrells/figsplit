@@ -13,12 +13,17 @@ from figsplit.core.figsplit_wrapper import FigSplitWrapper
 FIGSPLIT_URL = "https://www.eecis.udel.edu/~compbio/FigSplit"
 
 
-def split(folder_path: Path, processed_file_path: Path):
+def split(folder_path: Path, processed_file_path: Path) -> bool:
     """Split function to call in parallel"""
+    print(folder_path)
     wrapper = FigSplitWrapper(FIGSPLIT_URL, pref_extensions=(".jpg"))
-    num_figures, num_processed, num_success = wrapper.split(folder_path)
-    with open(processed_file_path, "a", encoding="utf-8") as file:
-        file.write(f"{folder_path.stem},{num_figures},{num_processed},{num_success}\n")
+    num_figures, num_processed, num_success, error = wrapper.split(folder_path)
+    if not error:
+        with open(processed_file_path, "a", encoding="utf-8") as file:
+            file.write(
+                f"{folder_path.stem},{num_figures},{num_processed},{num_success}\n"
+            )
+    return error
 
 
 def read_processed_ids(filename: str) -> List[str]:
@@ -72,11 +77,21 @@ def main():
     tentative_ids = [x for x in listdir(input_path) if ((input_path) / x).is_dir()]
     ids_to_process = list(set(tentative_ids).difference(set(processed_ids)))
 
-    batch_size = 128
+    batch_size = 12
     items = [(input_path / el, processed_log) for el in ids_to_process]
 
     for data_batch in batch(items, size=batch_size):
         pool = multiprocessing.Pool()
+
+        server_error = False
         with multiprocessing.Pool(args.num_workers) as pool:
-            pool.starmap(split, data_batch)
+            result = pool.starmap(split, data_batch)
+            # check if the server returns 500
+            for value in result:
+                if value:  # one called triggered a server error
+                    server_error = True
+                    break
         pool.terminate()
+        if server_error:
+            logging.error("ending because of server error")
+            return
