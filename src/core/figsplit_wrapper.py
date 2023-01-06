@@ -38,7 +38,7 @@ class FigSplitWrapper:
                 files = {"file": figure_file}
                 response = post(self.url, files=files, timeout=60)
                 if response.status_code == 200:
-                    self.__download_splitted_content(_folder_path, response, figure)
+                    self.download_splitted_content(_folder_path, response, figure)
                     num_success += 1
                 else:
                     message = f"{_folder_path} -{figure} failed with code {response.status_code}"
@@ -46,7 +46,7 @@ class FigSplitWrapper:
             except ConnectTimeout:
                 message = f"{_folder_path} -{figure} timed-out:"
                 logging.error(message, exc_info=True)
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 message = f"{_folder_path}-{figure}:"
                 logging.error(message, exc_info=True)
             finally:
@@ -55,7 +55,8 @@ class FigSplitWrapper:
 
         return num_figures, num_processed, num_success
 
-    def __download_splitted_content(self, _folder_path, _response, _figure_name):
+    def download_splitted_content(self, _folder_path, _response, _figure_name):
+        """Process response to get output"""
         html = _response.text.split("\n")
         for line in html:
             if "download" in line and self.endpoint in line:
